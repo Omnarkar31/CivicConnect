@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm border-start border-primary border-4">
+    <div>
+        <h4 class="mb-0">Welcome, <span class="text-primary fw-bold">{{ current_user.name }}!</span></h4>
+        <small class="text-muted">Ward No: {{ current_user.ward.ward_number }}</small>
+    </div>
+    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header {% if current_user.role == 'ward_admin' %}bg-dark{% else %}bg-primary{% endif %} text-white">Quick Actions</div>
+            <div class="card-body row g-3 text-center">
+                {% if current_user.role == 'ward_admin' %}
+                    <div class="col-6" data-bs-toggle="modal" data-bs-target="#projectModal" style="cursor: pointer;">
+                        <div class="p-3 border rounded shadow-sm hover-card bg-light">
+                            <img src="https://cdn-icons-png.flaticon.com/512/4333/4333631.png" width="45" class="mb-2">
+                            <h6 class="fw-bold mb-0">Add Project</h6>
+                        </div>
+                    </div>
+                    <div class="col-6" data-bs-toggle="modal" data-bs-target="#announcementModal" style="cursor: pointer;">
+                        <div class="p-3 border rounded shadow-sm hover-card bg-light">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3652/3652191.png" width="45" class="mb-2">
+                            <h6 class="fw-bold mb-0">Post Alert</h6>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-6" data-bs-toggle="modal" data-bs-target="#complaintModal" style="cursor: pointer;">
+                        <div class="p-3 border rounded shadow-sm hover-card bg-light">
+                            <img src="https://cdn-icons-png.flaticon.com/512/9431/9431166.png" width="45" class="mb-2">
+                            <h6 class="fw-bold mb-0">Report Problem</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded shadow-sm hover-card bg-light">
+                            <img src="https://cdn-icons-png.flaticon.com/512/2666/2666505.png" width="45" class="mb-2">
+                            <h6 class="fw-bold mb-0">Track Status</h6>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-bold">📢 Ward Notices</div>
+            <div class="card-body">
+                {% for ann in announcements %}
+                <div class="border-bottom mb-2 pb-2">
+                    <strong class="{% if ann.priority == 'Urgent' %}text-danger{% endif %}">{{ ann.title }}</strong>
+                    <p class="small text-muted mb-0">{{ ann.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-bold">Civic Issues Feed</div>
+            <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                {% for c in complaints %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold small">{{ c.category }}</span>
+                        <span class="badge {% if c.status == 'Submitted' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ c.status }}</span>
+                    </div>
+                    <p class="text-muted small mb-1">{{ c.description }}</p>
+                    {% if c.file_path %}
+                        <a href="{{ url_for('static', filename='uploads/' + c.file_path) }}" target="_blank" class="btn btn-sm btn-outline-info py-0">View Attachment</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="complaintModal" tabindex="-1">
+    <div class="modal-dialog"><form class="modal-content" action="{{ url_for('submit_complaint') }}" method="POST" enctype="multipart/form-data">
+        <div class="modal-header bg-primary text-white"><h5>Report Civic Issue</h5></div>
+        <div class="modal-body">
+            <select name="category" class="form-select mb-3" required>
+                <option value="Roads/Potholes">Roads/Potholes</option>
+                <option value="Water Supply">Water Supply</option>
+                <option value="Electricity">Streetlights</option>
+                <option value="Garbage">Garbage/Waste</option>
+            </select>
+            <textarea name="description" class="form-control mb-3" placeholder="Explain the problem..." required></textarea>
+            <label class="small fw-bold">Attach Evidence (Image/PDF/Video)</label>
+            <input type="file" name="file" class="form-control">
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary w-100">Submit to Ward Office</button></div>
+    </form></div>
+</div>
+
+<div class="modal fade" id="projectModal" tabindex="-1">
+    <div class="modal-dialog"><form class="modal-content" action="{{ url_for('add_project') }}" method="POST">
+        <div class="modal-header bg-dark text-white"><h5>Launch New Project</h5></div>
+        <div class="modal-body">
+            <input type="text" name="title" class="form-control mb-2" placeholder="Project Name" required>
+            <input type="text" name="contractor" class="form-control mb-2" placeholder="Contractor" required>
+            <input type="number" name="budget" class="form-control mb-2" placeholder="Budget (₹)" required>
+            <input type="date" name="deadline" class="form-control mb-2" required>
+            <input type="number" name="progress" class="form-control" placeholder="Progress %" value="0">
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-dark w-100">Create</button></div>
+    </form></div>
+</div>
+
+<div class="modal fade" id="announcementModal" tabindex="-1">
+    <div class="modal-dialog"><form class="modal-content" action="{{ url_for('post_announcement') }}" method="POST">
+        <div class="modal-header bg-success text-white"><h5>Broadcast Notice</h5></div>
+        <div class="modal-body">
+            <input type="text" name="title" class="form-control mb-2" placeholder="Title" required>
+            <textarea name="message" class="form-control mb-2" placeholder="Message..." required></textarea>
+            <select name="priority" class="form-select"><option value="Normal">Normal</option><option value="Urgent">Urgent</option></select>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-success w-100">Post Announcement</button></div>
+    </form></div>
+</div>
+{% endblock %}

@@ -22,7 +22,7 @@ CivicConnect is a responsive web application designed to streamline ward-level m
 ## 🛠️ Tech Stack
 * **Backend:** Python (Flask)
 * **Database:** MySQL (SQLAlchemy ORM)
-* **Frontend:** HTML5, CSS3, Bootstrap 5 (Mobile-Responsive)
+* **Frontend:** HTML5, CSS3, Bootstrap 
 * **Authentication:** Flask-Login
 * **Security:** Password Hashing (Werkzeug)
 

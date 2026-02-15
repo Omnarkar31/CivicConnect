@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-dark text-white p-4">
+                <h3 class="mb-0">Government Portal: Appoint Admin</h3>
+                <p class="small mb-0 opacity-75">Initialize a new ward and generate an official access code.</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('gov_create') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Official Admin Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Commissioner Rajesh" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Official Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="admin@ward.gov" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label fw-bold">Ward Number</label>
+                            <input type="text" name="ward_number" class="form-control" placeholder="e.g. 101" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-bold">Temporary Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning py-2 small">
+                        <strong>Note:</strong> Clicking create will instantly generate a unique Ward Code for citizens.
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Create Admin & Generate Code</button>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('login') }}" class="text-muted small">Back to Login Portal</a>
+            <span class="text-muted mx-1">·</span>
+            <span class="text-muted small">(This page is not linked; share the URL only with government staff.)</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

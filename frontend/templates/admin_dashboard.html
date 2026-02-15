@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 bg-dark p-3 rounded shadow text-white border-start border-danger border-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Admin Panel</h4>
+        <small class="opacity-75">Ward: {{ current_user.ward.ward_number }}</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="{% if view != 'default' %}col-md-4{% else %}col-md-12{% endif %} transition-all">
+        <div class="row g-3">
+            <div class="{% if view != 'default' %}col-12{% else %}col-md-4{% endif %}">
+                <a href="{{ url_for('admin_dashboard', view='complaints') }}" class="text-decoration-none">
+                    <div class="card p-4 text-center hover-card shadow-sm position-relative {% if view == 'complaints' %}bg-danger text-white{% endif %}">
+                        <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-dark">{{ unviewed_count|default(complaints|length) }}</span>
+                        <img src="https://cdn-icons-png.flaticon.com/128/9375/9375697.png" alt="Complaint Icon" width="60" class="mx-auto mb-3">
+                        <h5 class="fw-bold">View Complaints</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if view != 'default' %}
+    <div class="col-md-8 animate-in">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>Ward Complaints <span class="badge bg-danger ms-1">{{ complaints|length }}</span></span>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-white text-decoration-none fw-bold">✕</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for c in complaints %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-start flex-wrap gap-2">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="mb-2 p-2 bg-light rounded small">
+                                    <div class="fw-bold">Name:</div> <span>{{ c.user.name }}</span>
+                                    <div class="fw-bold mt-1">Address:</div> <span>{{ c.user.address or '—' }}</span>
+                                    <div class="fw-bold mt-1">Phone:</div> <span>{{ c.user.phone or '—' }}</span>
+                                </div>
+                                <p class="mb-1 small text-muted">{{ c.category }} · <span class="badge {% if c.status == 'Completed' %}bg-success{% elif c.status == 'In Process' %}bg-info{% else %}bg-warning text-dark{% endif %}">{{ c.status }}</span></p>
+                                <p class="mb-1 small">{{ c.description }}</p>
+                                {% if c.file_path %}
+                                <div class="mt-2 small">
+                                    <span class="text-muted">Citizen attachments:</span>
+                                    {% for path in c.file_path.split(',') %}
+                                    {% set path = path.strip() %}
+                                    {% if path %}
+                                    {% set fname = path.split('/')[-1] %}
+                                    {% set ext = fname.split('.')[-1]|lower if '.' in fname else '' %}
+                                    {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                                    <a href="{{ url_for('serve_upload', filename=path) }}" target="_blank" class="d-inline-block me-2 mt-1"><img src="{{ url_for('serve_upload', filename=path) }}" alt="Attachment" class="rounded border" style="max-height: 80px;"></a>
+                                    {% else %}
+                                    <a href="{{ url_for('serve_upload', filename=path) }}" target="_blank" class="d-block">{{ fname }}</a>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if c.work_photos %}
+                                <div class="mt-2 small">
+                                    <span class="text-muted">Work photos:</span>
+                                    {% for path in c.work_photos.split(',') %}
+                                    {% if path.strip() %}
+                                    <a href="{{ url_for('serve_upload', filename=path.strip()) }}" target="_blank" class="d-inline-block me-2"><img src="{{ url_for('serve_upload', filename=path.strip()) }}" alt="Work" class="rounded" style="max-height: 60px;"></a>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-muted">{{ c.created_at.strftime('%d %b %Y, %H:%M') if c.created_at else '' }}</small>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <form action="{{ url_for('update_complaint', cid=c.id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-wrap align-items-end gap-2">
+                                    <div class="small">
+                                        <label class="form-label small mb-0">Status</label>
+                                        <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="Reviewing" {% if c.status == 'Reviewing' %}selected{% endif %}>Reviewing</option>
+                                            <option value="In Process" {% if c.status == 'In Process' %}selected{% endif %}>In Process</option>
+                                            <option value="Completed" {% if c.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                        </select>
+                                    </div>
+                                    <div class="small">
+                                        <label class="form-label small mb-0">Work photo</label>
+                                        <input type="file" name="work_photos" class="form-control form-control-sm" accept="image/*" multiple>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                </form>
+                                <form action="{{ url_for('remove_complaint', cid=c.id) }}" method="POST" onsubmit="return confirm('Remove this complaint?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-4">No complaints reported yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .hover-card { transition: 0.3s; border: 2px solid transparent; cursor: pointer; }
+    .hover-card:hover { transform: translateY(-5px); border-color: #2e84ed; }
+    .animate-in { animation: fadeIn 0.4s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .transition-all { transition: all 0.3s ease; }
+</style>
+{% endblock %}
